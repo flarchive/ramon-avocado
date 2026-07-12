@@ -1,0 +1,156 @@
+// ─── Bookmarks (saved discussions) ───────────────────────────────────────────
+//
+// The /salvos page reuses the .AvocadoDiscussions layout, so this file only adds
+// the bookmark toggle button (on ThreadCards), the search-variant actions row,
+// the page title icon and the guest prompt. Colours are theme variables, so
+// dark mode is handled by Flarum's [data-theme^=dark] token switch.
+
+// ── Toggle button on cards ────────────────────────────────────────────────────
+// Hidden until the card is hovered, mirroring .AvocadoHome-threadControls.
+// Stays visible on keyboard focus and on touch devices (no hover to reveal it).
+.AvocadoThreadCard-bookmarkBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  border-radius: 50%;
+  color: var(--home-muted, #8f9097);
+  cursor: pointer;
+  font-size: 14px;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: background 0.15s ease, color 0.15s ease, transform 0.12s ease, opacity 0.15s ease;
+
+  .AvocadoHome-threadCard:hover &,
+  .AvocadoSearch-threadCard:hover &,
+  &:focus-visible {
+    opacity: 1;
+  }
+
+  @media (hover: none) {
+    opacity: 1;
+  }
+
+  &:hover {
+    background: color-mix(in srgb, var(--primary-color) 12%, transparent);
+    color: var(--primary-color);
+  }
+
+  &:active {
+    transform: scale(0.88);
+  }
+
+  &.is-saved {
+    color: var(--primary-color);
+  }
+}
+
+// ── Search-variant actions row (bookmark + controls dropdown) ────────────────
+.AvocadoSearch-threadActions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+  align-self: flex-start;
+}
+
+// ── Note/reminder meta row (BookmarksPage cards) ──────────────────────────────
+.AvocadoBookmark-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin-top: 8px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 12.5px;
+  color: var(--home-muted, #8f9097);
+  text-align: left;
+
+  &:hover {
+    color: var(--primary-color);
+  }
+
+  i {
+    margin-right: 5px;
+    font-size: 11px;
+  }
+}
+
+.AvocadoBookmark-metaReminder {
+  color: var(--primary-color);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+// ── Note/reminder modal ───────────────────────────────────────────────────────
+.AvocadoBookmarkModal {
+  &-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--muted-color);
+    margin-bottom: 6px;
+  }
+
+  &-note {
+    resize: vertical;
+    min-height: 72px;
+  }
+
+  &-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 0;
+  }
+
+  &-remove {
+    color: #ef4444;
+
+    &:hover {
+      color: #dc2626;
+    }
+  }
+}
+
+// ── Page title icon ───────────────────────────────────────────────────────────
+.AvocadoBookmarks-titleIcon {
+  font-size: 0.78em;
+  margin-right: 9px;
+  color: var(--primary-color);
+}
+
+// ── Guest prompt (logged-out visitor hits /salvos directly) ──────────────────
+.AvocadoBookmarks-guest {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 64px 24px;
+  text-align: center;
+  color: var(--home-muted, #8f9097);
+
+  > i {
+    font-size: 44px;
+    opacity: 0.4;
+  }
+
+  > p {
+    font-size: 15px;
+    font-weight: 600;
+    margin: 0;
+    max-width: 360px;
+    line-height: 1.5;
+  }
+}
