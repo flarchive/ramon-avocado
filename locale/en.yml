@@ -1,0 +1,558 @@
+ramon-avocado:
+  admin:
+    loading: "Loading…"
+    search_tags: "Search tags…"
+    settings:
+      spinner_option_avocado: Avocado
+      spinner_option_orbital: Orbital
+      spinner_option_css_orbital: "Orbital (CSS)"
+      spinner_option_ditie: "ditie.online"
+      spinner_option_b2: Spinning
+      spinner_option_flarum: Flarum
+      spinner_option_pl3: Pulse
+      spinner_option_custom: Custom
+      # Sections
+      section_homepage: Homepage
+      section_auth: Login & Registration
+      section_search: Search
+      section_bookmarks: Bookmarks
+      section_user_card: User Card
+      section_presence: Presence
+      section_cakeday: Cakeday
+      section_posts: Posts
+      section_logo: Logo
+      section_footer: Footer
+      section_colored: Colored
+      section_team: Team Page
+      section_hero_image_tags: Hero image on discussions
+      section_discussion: Discussion page
+      section_home_categories: Featured categories
+      section_showcase: Showcase / Portfolio
+      section_home_banner: Banner
+      section_online: Online users
+      section_guests: Guests
+      section_disc_hero_icon: Discussion header icon
+
+      # Settings shell: tabs + search
+      group_appearance: Appearance
+      group_home: Homepage
+      group_discussions: Discussions
+      group_community: Community
+      group_access: Access
+      groups_aria: Settings groups
+      search_placeholder: "Search settings…"
+      search_clear: Clear search
+      search_empty: No settings found.
+
+      # Discussion page style
+      disc_style_label: Discussion page style
+      disc_style_help: >
+        Default is today’s page. Editorial widens the reading column and threads the
+        conversation with a hairline spine running down the avatar column, each avatar
+        sitting on it as a node and each time gap becoming a labelled station. The header
+        is the same in both. Desktop only — phones and tablets keep the current page
+        either way.
+      disc_style_default: Default
+      disc_style_editorial: Editorial (conversation spine)
+
+      # Group badge position in posts
+      post_badge_position_label: Group badge position in posts
+      post_badge_position_help: >
+        Where a member’s group badges sit in a post. The first option turns the custom badge
+        off: back to Flarum’s round badge overlapping the avatar. Every other option turns
+        each badge into a capsule with the group name beside its icon. Works with the fixed
+        avatar effect on or off. Phones always keep the compact overlay.
+      post_badge_position_default: Flarum default (off — disc over the avatar)
+      post_badge_position_inline: Beside the username
+      post_badge_position_below: Below the username (own line)
+      post_badge_position_side: Under the avatar (left column)
+      post_badge_position_side_icons: Under the avatar — icons only, side by side
+
+      # Featured / categories on homepage
+      featured_tags_label: Featured Categories
+      featured_tags_help: Selected categories appear highlighted with a star badge on the homepage and categories page.
+      featured_tags_empty: No tags found.
+      tag_picker_placeholder: "Select tags…"
+
+      # Showcase / portfolio
+      showcase_enabled_label: Enable Showcase / Portfolio section
+      showcase_enabled_help: Show a showcase slider on the homepage with discussions from selected tags.
+      showcase_tag_label: Showcase / Portfolio Tags
+      showcase_tag_help: Discussions from these tags appear in the showcase slider on the homepage.
+      showcase_heading_label: Showcase Section Title
+      showcase_heading_help: Custom title for the showcase section. Leave empty to use default.
+      showcase_count_label: Number of Showcase Items
+      showcase_count_help: Display 1 to 5 discussion cards in the showcase section.
+      showcase_image_style_label: Card Image Style
+      showcase_image_style_help: Choose between compact or full-height image display.
+      showcase_image_style_default: Default (Compact)
+      showcase_image_style_full: Full Image
+
+      # Section title overrides
+      section_titles_heading: Section titles
+      section_titles_help: Override the homepage section titles. Leave any field empty to use the language pack default.
+      categories_heading_label: Categories Section Title
+      popular_heading_label: Popular Discussions Title
+      following_heading_label: Following Discussions Title
+
+      # Online users
+      show_online_users_label: Show online users count
+      show_online_users_help: Display the number of currently online users.
+      show_online_count_label: Show online count text
+      show_online_count_help: 'Show the "X online" label next to the online user avatars.'
+
+      # Auth & banner
+      custom_auth_modal_label: Use custom login / sign up modal
+      custom_auth_modal_help: Show the custom side-panel design on the Log In, Sign Up and Forgot Password modals. Turn off to use Flarum's default modal.
+      auth_image_label: Auth Modal Image
+      auth_image_help: Background image shown in the right panel of the login, sign up, and forgot password modals.
+      banner_image_label: Banner Image
+      banner_image_help: Upload the hero banner image displayed at the top of the forum.
+      show_auth_buttons_label: Show Login / Sign Up buttons in header for guests
+      show_auth_buttons_help: Display Log In and Sign Up pill buttons in the header secondary nav for guests.
+      show_guest_cta_label: Show guest call-to-action
+      show_guest_cta_help: Display a call-to-action message for guests.
+      hero_image_position_label: Hero Image Position
+      hero_image_position_help: "CSS background-position value, e.g. 'center top' or '50% 20%'."
+
+      # Custom hero (HTML)
+      custom_hero_enabled_label: Use custom hero content (HTML)
+      custom_hero_enabled_help: "Replace the default hero content (icon, title, description, Login/Sign Up buttons) with your own HTML. The hero banner wrapper, background image and overlay stay intact. Shown to guests only — same as the default hero."
+      custom_hero_html_label: Custom hero HTML
+      custom_hero_html_help: "HTML injected inside the hero banner overlay (replaces .AvocadoHome-heroBannerContent). Inline style tags are supported."
+      custom_hero_html_placeholder: |-
+        <div class="AvocadoHome-heroBannerContent">
+          <h1 class="AvocadoHome-heroBannerTitle">Welcome!</h1>
+          <p class="AvocadoHome-heroBannerDesc">Anything you want — links, images, buttons.</p>
+        </div>
+
+      # Search
+      search_v1_label: Enable V1 search bar style
+      search_v1_help: Show the inline search dropdown instead of the V2 modal.
+
+      # Bookmarks
+      bookmarks_enabled_label: Enable the bookmark system
+      bookmarks_enabled_help: "Save button on cards, the Saved page, notes, reminders and reminder notifications. Turning this off hides everything and disables the API endpoints; saved data is kept."
+      bookmarks_fof_notice: "FoF Bookmarks is enabled, so Avocado hands its own bookmark system over to it: the theme shows a single Saved menu item and a single save button, which writes to FoF Bookmarks. Notes and reminders are unavailable while it is on; your saved Avocado data is kept and comes back if you disable it."
+      clock_format_label: Time format
+      clock_format_help: "Used by reminders: the hour picker in “Remind me” and the time shown on saved cards. Automatic follows each visitor’s browser."
+      clock_format_auto: "Automatic (visitor’s browser)"
+      clock_format_12: "12-hour (2:30 PM)"
+      clock_format_24: "24-hour (14:30)"
+
+      # User Card
+      user_card_enabled_label: Enable the user hover card
+      user_card_enabled_help: "Show a Discourse-style mini profile (bio, badges, stats, actions) when hovering avatars and usernames."
+
+      # Presence
+      presence_enabled_label: "Show who's reading a discussion"
+      presence_enabled_help: 'Live "N reading now" indicator in the discussion hero, with reader avatars. Requires the Realtime extension; users with "disclose online" off are never listed.'
+
+      # Cakeday
+      cakeday_enabled_label: Show account anniversary badge
+      cakeday_enabled_help: "Show a 🎂 next to the username on the anniversary of the account registration (thread cards, posts and user card)."
+
+      # Posts
+      show_share_label: Show Share button on posts
+      show_share_help: Add a Share action button to each post.
+      show_action_icons_label: Show icons on Like and Reply buttons
+      show_action_icons_help: Display Font Awesome icons on the Like and Reply action buttons.
+      fixed_avatar_effect_label: Enable fixed avatar effect
+      fixed_avatar_effect_help: Keep the post avatar sticky while reading long comments on desktop.
+      threads_style_label: Enable Threads-style discussion layout
+      threads_style_help: Display the OP post as a card and indent replies with a left border, like the Threads app.
+
+      # Discussion hero decoration icon
+      hero_decoration_icon_label: Show secondary tag icon on discussion hero
+      hero_decoration_icon_help: Display the secondary tag icon as a large decorative element on the right side of the discussion header.
+      hero_decoration_icon_opacity_label: Icon opacity (0-100)
+      hero_decoration_icon_opacity_help: Set the opacity of the decoration icon as a percentage. 100 = fully opaque, 0 = invisible.
+      hero_decoration_icon_count_label: Number of decoration icons
+      hero_decoration_icon_count_help: 1 icon uses the first child tag. 2 icons also shows the second child tag icon, offset to the left.
+      hero_decoration_icon_count_one: 1 icon (first child tag)
+      hero_decoration_icon_count_two: 2 icons (first and second child tag)
+      hero_deco_divider_label: Show divider between decoration icons
+      hero_deco_divider_help: Display an icon in the gap between the two decoration icons (e.g. a "vs" symbol for sport sites).
+      hero_deco_divider_icon_label: Divider icon class
+      hero_deco_divider_icon_help: 'Font Awesome class for the divider icon, e.g. "fas fa-times" or "fas fa-circle".'
+
+      # Colored accents
+      colored_enabled_label: Enable colored accents
+      colored_enabled_help: Apply the active tag or discussion color to primary buttons, links, and other UI accents across the forum.
+      colored_border_style_label: Discussion card border style
+      colored_border_style_help: Add a colored border to discussion cards using the primary tag color.
+      colored_border_style_none: None
+      colored_border_style_left: Left border
+      colored_border_style_full: Full border
+
+      # Post CTA
+      show_post_cta_label: Show Join CTA after first post for guests
+      show_post_cta_help: Display a Log In / Sign Up card after the first post in a discussion, visible only to guests.
+      post_cta_position_label: CTA position (after which post number)
+      post_cta_position_help: Insert the CTA banner between this post number and the next one.
+      post_cta_position_1: "After post #1"
+      post_cta_position_2: "After post #2"
+      post_cta_position_3: "After post #3"
+      post_cta_position_4: "After post #4"
+      post_cta_position_5: "After post #5"
+
+      # Logo
+      logo_svg_label: Logo SVG
+      logo_svg_help: Upload a custom SVG logo for your forum.
+      logo_enabled_label: Enable Custom Logo
+      logo_enabled_help: Display the custom logo in the header.
+
+      # Loading spinner
+      custom_loading_spinner_label: Custom loading spinner
+      custom_loading_spinner_help: Replace the default text loading indicator with an animated SVG spinner.
+      loading_spinner_style_label: Spinner style
+      spinner_custom_code_label: Custom spinner code
+      spinner_custom_code_help: Paste any SVG or HTML to use as the loading spinner.
+
+      # Links / avatar
+      hide_links_for_guests_label: Hide links for guests
+      hide_links_for_guests_help: Prevent guests from following links in posts. Clicking a link shows a Login / Sign Up prompt instead.
+      custom_default_avatar_label: Custom Default Avatar
+      custom_default_avatar_help: Upload a custom default avatar image for users without an avatar.
+
+      # Hero image on discussions (per-tag opt-in)
+      hero_image_tags_label: Tags that ask for a hero image
+      hero_image_tags_help: "When the user adds one of these tags to a new discussion, the composer reveals an optional image upload field. The uploaded image is shown as the discussion header background and as the first image in the homepage showcase."
+
+      # Team page
+      team_enabled_label: Enable Team page
+      team_enabled_help: Show a /team page listing members of the selected groups.
+      team_title_label: Page title
+      team_title_placeholder: Our Team
+      team_desc_label: Page description
+      team_desc_placeholder: Meet the people behind the community.
+      team_groups_label: Groups to display
+      team_groups_help: Members of the selected groups will appear on the Team page.
+      team_groups_empty: No groups found.
+
+      # Tag icons (SVG)
+      section_tag_icon_svg: Tag icons (SVG)
+      tag_icon_svg_tags_notice: This needs the Tags extension, which is not enabled.
+      tag_icon_svg_standalone_notice: The standalone Tag Icon SVG extension is enabled, so it keeps handling SVG icons and this switch does nothing. Disable that extension to let the theme take over — the icons you already saved are kept.
+      tag_icon_svg_label: Allow SVG as a tag icon
+      tag_icon_svg_help: Adds an SVG field to the Edit tag modal. An SVG replaces the Font Awesome icon everywhere the tag icon is shown — including the changelog types. SVGs are sanitized on save. Reload the admin after turning it on.
+
+      # Changelog
+      section_changelog: Changelog
+      changelog_enabled_label: Enable the Changelog page
+      changelog_enabled_help: Show a /changelog page that turns tags into products and their discussions into releases. Needs the Tags extension.
+      changelog_tags_label: Products
+      changelog_tags_help: Each tag selected here is a changelog of its own (Alega, Avocado, another extension…). Every discussion in it is a release, and the sub-tags of that tag are the change types — Added, Fixed, Removed, Security… — coloured and iconed by the tag itself. Who can publish is set by the tag permissions. Choosing a product here also asks for a cover image in the composer.
+      changelog_title_label: Page title
+      changelog_title_placeholder: Changelog
+      changelog_description_label: Page description
+      changelog_description_placeholder: "What's new, what's fixed and what's gone — release by release."
+      changelog_version_help: "Each release has a Version field in the composer, next to the cover image — type it as you want it shown, like “v2.4.0”. The cover is either an uploaded image or a banner in the tag colour. Releases without a version are listed by date only."
+    edit_tag:
+      svg_label: SVG icon
+      svg_text: Send an .svg file. When set, it replaces the Font Awesome icon above and behaves the same everywhere the tag icon is shown.
+      svg_current: SVG icon set
+      svg_drop_title: Drop an .svg file here
+      svg_drop_hint: "or use the button · up to {max} KB"
+      svg_replace_hint: Drop another .svg file to replace it.
+      svg_upload_button: Choose file
+      svg_replace_button: Replace
+      svg_remove_button: Remove SVG
+      svg_mono_title: Match the text colour
+      svg_mono_help: Paint the icon with the current colour, like a Font Awesome glyph. Turn off to keep the colours inside the SVG.
+      svg_invalid: That is not an SVG file. Send a valid .svg.
+      svg_too_large: "The SVG is too large (maximum {max} KB)."
+    footer_settings:
+      footer_enabled: Enable Custom Footer
+      footer_company: Company Information
+      footer_company_name: Company Name
+      footer_company_description: Company Description
+      footer_company_description_placeholder: "Brief description about your company or forum..."
+      footer_company_logo_url: Company Logo URL
+      footer_links_config: Footer Links Configuration
+      footer_links_help_json: "Configure the footer link columns in JSON format. Each column should have a title and a list of links with label and url."
+      footer_footer_bottom: Footer Bottom
+      footer_copyright_text: Copyright Text
+      footer_social: Social Links
+      footer_show_social: Show Social Media Links
+      footer_social_help_json: "Configure social media links in JSON format. Use keys: facebook, twitter, linkedin, instagram, youtube."
+  forum:
+    loading: "Loading…"
+    back: "Back"
+    profile:
+      joined: "Joined {date}"
+      member_since: "Member since {date}"
+      scroll_left: "Scroll left"
+      scroll_right: "Scroll right"
+    online_users:
+      online: "online"
+    tag_picker:
+      remove: "Remove tag"
+    actions:
+      share: Share
+    post_cta:
+      text: "Like what you see? Join the discussion!"
+      or: "or"
+    link_cta:
+      placeholder: "Login to view link"
+    search:
+      title: "Search"
+      placeholder: "Search…"
+      placeholder_hero: "Search the forum…"
+      hero_title: "What are you looking for?"
+      hero_sub: "Search discussions, posts and members"
+      tab_discussions: Discussions
+      tab_posts: Posts
+      tab_users: Users
+      search_button: Search
+      clear: Clear
+      sort_relevance: Relevance
+      sort_latest: Latest
+      sort_top: Top
+      sort_newest: Newest
+      sort_oldest: Oldest
+      no_posts_found: "No posts found for \"{q}\"."
+      no_posts_match: "No posts match these filters."
+      no_users_found: "No users found for \"{q}\"."
+      no_discussions_query: "No discussions found for \"{q}\"."
+      no_discussions_filter: "No discussions match these filters."
+      enter_search_term: "Enter a search term to find users."
+      posts_for: "Posts for"
+      posts_filtered_by: "Posts filtered by"
+      posts_title: "Posts search"
+      filtered_by: "Filtered by"
+      results: "Search results"
+      results_for: "Results for"
+      tip: "Tip: prefix "
+      tip_suffix: " to filter by tag"
+      esc_key: "ESC"
+      close: "Close (Escape)"
+    header:
+      back: Back
+      back_home: Back to Home
+      search: Search
+      or: "or"
+    discussion:
+      post_singular: post
+      post_plural: posts
+      participant_singular: participant
+      participant_plural: participants
+      hero_image_add: Add image
+      hero_image_replace: Replace image
+      hero_image_remove: Remove image
+      hero_image_remove_confirm: Remove the hero image from this discussion?
+    home:
+      nav_label: Navigation
+      nav_more: More
+      nav_more_label: Show more navigation links
+      all_categories: All categories
+      all_title: All discussions
+      back_home: Home
+      badge_following: Following
+      badge_sticky: Pinned
+      badge_unread_tooltip: "{count} unread posts"
+      categories_heading: Categories
+      choose_tags: Choose tags
+      bypass_tag_requirements: Bypass tag requirements
+      choose_primary_tag_singular: Choose 1 primary tag
+      choose_primary_tag_plural: "Choose {count} primary tags"
+      choose_secondary_tag_singular: Choose 1 secondary tag
+      choose_secondary_tag_plural: "Choose {count} secondary tags"
+      composer_body_placeholder: "Share your thoughts…"
+      composer_close: Close
+      composer_edit: Edit
+      composer_post: Post Discussion
+      composer_preview: Preview
+      composer_preview_empty: "Nothing to preview."
+      composer_submitting: "Posting…"
+      composer_title_placeholder: "Discussion title…"
+      composer_hero_image_label: Hero image (optional)
+      composer_hero_image_picked: Image selected
+      composer_hero_image_remove: Remove image
+      composer_hero_image_upload_failed: "Could not upload the hero image. You can try again on the discussion page."
+      discussion_singular: discussion
+      discussions: discussions
+      filter_tags: Filter tags
+      following_heading: Following
+      like: Like
+      like_count_plural: "{count} likes"
+      like_count_singular: "1 like"
+      log_in: Log In
+      more: more
+      new_discussion: New Discussion
+      no_tags_found: No tags found
+      or: "or"
+      popular_heading: Popular discussions
+      popular_no_discussions: "No discussions yet."
+      replies: Replies
+      reply_count_plural: "{count} replies"
+      reply_count_singular: "1 reply"
+      reply_label: Reply
+      reply_singular: "1 reply"
+      reply_plural: "{count} replies"
+      see_all: See all
+      see_other_replies: See other {count} replies
+      see_other_reply_singular: See other {count} reply
+      sign_up: Sign Up
+      sort_trending: Trending
+      start_discussion: "Tell everyone what are you working on..."
+      today_time: "Today, {time}"
+      untitled: Untitled
+      view: View
+      view_post: View post
+      post_singular: "1 post"
+      post_plural: "{count} posts"
+      discussion_singular_card: "1 discussion"
+      discussion_plural_card: "{count} discussions"
+      yesterday_time: "Yesterday, {time}"
+      showcase_heading: "Showcase"
+      ws_update_singular: "1 new discussion"
+      ws_update_plural: "{count} new discussions"
+    discussions:
+      title: All discussions
+      home: Back to Home
+      load_more: Load more
+      empty: "No discussions found."
+    bookmarks:
+      title: Saved
+      save: Save
+      unsave: Remove from saved
+      edit: Edit bookmark
+      empty: "You haven't saved any discussions yet."
+      empty_posts: "You haven't bookmarked any posts yet."
+      guest_prompt: Log in to save discussions and find them here later.
+      toggle_error: Could not update your saved list. Please try again.
+      update_error: Could not update your bookmark. Please try again.
+      modal_title: Bookmark
+      modal_save: Save
+      modal_cancel: Cancel
+      note_label: Note
+      note_placeholder: "Why are you saving this? (optional)"
+      reminder_label: Remind me
+      reminder_none: No reminder
+      reminder_later: Later today (in 4 hours)
+      reminder_tomorrow: Tomorrow morning
+      reminder_week: Next week
+      reminder_custom: "Pick date & time"
+      reminder_invalid: That date and time have already passed. Choose a moment in the future.
+      reminder_invalid_date: Choose a date for the reminder.
+      reminder_date_label: Date
+      reminder_hour_label: Hour
+      reminder_minute_label: Minute
+      reminder_meridiem_label: AM or PM
+      reminder_am: AM
+      reminder_pm: PM
+    notifications:
+      bookmark_reminder_text: Reminder about your saved discussion
+    settings:
+      notify_bookmark_reminder_label: Bookmark reminders
+    presence:
+      reading_now: "{count} reading now"
+    cakeday:
+      tooltip_singular: "Account anniversary — 1 year here today!"
+      tooltip_plural: "Account anniversary — {years} years here today!"
+      aria: Account anniversary
+    user_card:
+      online: Online
+      last_seen: "Seen {time}"
+      discussions: discussions
+      posts: posts
+      joined_label: joined
+      view_profile: View profile
+      message: Message
+    post:
+      op_badge: OP
+      copy_code: "Copy code"
+    messages:
+      deleted_message: Message deleted
+    tags:
+      title: Categories
+      home: Home
+      discussion_singular: discussion
+      discussion_plural: discussions
+      other_tags_label: Other Tags
+      featured: Featured
+      all_discussions: All discussions
+      empty: "No discussions in this category yet."
+      not_found: "Tag not found."
+      load_more: "Load more"
+    team:
+      title: Our Team
+      disabled: This page is not available.
+      empty: No members found.
+      no_bio: Community member.
+      discussions: discussions
+      posts: posts
+      member_since: "Since"
+      member_singular: member
+      member_plural: members
+    changelog:
+      title: Changelog
+      description: "What's new, what's fixed and what's gone — release by release."
+      products_label: Products
+      types_label: Filter by type
+      all_products: All products
+      all_types: All types
+      latest: Latest
+      version_label: Version
+      version_placeholder: "Version (e.g. v2.4.0)"
+      cover_color: Tag colour cover
+      new_release: New release
+      composer_title: New release
+      composer_title_placeholder: "Release title…"
+      composer_body_placeholder: "Write the release notes…"
+      composer_submit: Publish release
+      edit_release: Edit release
+      cover_off: No cover (tag default)
+      cover_change: Cover colour
+      cover_title: Cover colour
+      cover_auto: Automatic
+      cover_auto_help: From the product colour to the first change type.
+      cover_from_tags: From tags (pick one or more)
+      cover_presets: Presets
+      cover_tags_count: "{count, plural, one {# tag colour} other {# tag colours}}"
+      cover_preset_sunset: Sunset
+      cover_preset_ocean: Ocean
+      cover_preset_forest: Forest
+      cover_preset_violet: Violet
+      cover_preset_ember: Ember
+      cover_preset_slate: Slate
+      read_notes: Read the notes
+      hide_notes: Hide notes
+      notes_loading: "Loading notes…"
+      notes_failed: Could not load the notes.
+      replies: "{count, plural, one {# reply} other {# replies}}"
+      empty: No releases published yet.
+      empty_filtered: No releases of this type yet.
+      not_found: Product not found.
+      error: Could not load the changelog.
+      retry: Try again
+      load_more: Load more
+    link:
+      login_to_view: "Login to view link"
+    user:
+      posts_empty: "No posts yet."
+      discussions_empty: "No discussions yet."
+      likes_empty: "No liked posts yet."
+      mentions_empty: "No mentions yet."
+      load_more: "Load more"
+      online: "Online"
+  # Mensagens de erro devolvidas pela API (server-side). Fora de .forum./.admin.
+  # de propósito: não são embarcadas no bundle JS.
+  api:
+    invalid_discussion_id: "Invalid discussion id."
+    discussion_not_found: "Discussion not found."
+    invalid_note: "Invalid note."
+    note_too_long: "Note is too long."
+    invalid_reminder_date: "Invalid reminder date."
+    reminder_must_be_future: "Reminder must be in the future."
+    reminder_too_far: "Reminder is too far in the future."
+    file_not_readable: "Uploaded file is not readable."
+    no_file_uploaded: "No file uploaded."
+    file_too_large: "File is too large (max {max})."
+    unsupported_image_type: "Unsupported image type."
+    svg_forbidden_declaration: "SVG contains a forbidden DOCTYPE or ENTITY declaration."
+    svg_parse_failed: "Invalid SVG: could not parse the XML."
+    svg_invalid: "The uploaded file must be a valid SVG."
+    tag_icon_svg_invalid: "The SVG icon could not be read. Make sure it is valid SVG markup."
+    tag_icon_svg_too_large: "The SVG icon is too large (maximum {max} KB)."
