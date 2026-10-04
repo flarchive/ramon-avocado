@@ -1,0 +1,445 @@
+<?php
+
+/*
+ * This file is part of ramon/avocado.
+ *
+ * Copyright (c) 2026 Ramon.
+ *
+ * For the full copyright and license information, please view the LICENSE.md
+ * file that was distributed with this source code.
+ */
+
+namespace Ramon\Avocado;
+
+use Flarum\Api\Endpoint;
+use Flarum\Extend;
+use Ramon\Avocado\AvocadoServiceProvider;
+use Ramon\Avocado\Middleware\AddPerfHeaders;
+use Ramon\Avocado\Support\BookmarksRoute;
+use Ramon\Avocado\Support\BookmarksSchema;
+use Ramon\Avocado\Support\ChangelogSchema;
+use Ramon\Avocado\Support\HtmlSanitizer;
+use Ramon\Avocado\Support\SupportEvents;
+use Ramon\Avocado\Support\TagIconSvg;
+
+return [
+    (new Extend\ServiceProvider())
+        ->register(AvocadoServiceProvider::class),
+
+    (new Extend\Frontend('forum'))
+        ->js(__DIR__.'/js/dist/forum.js')
+        ->jsDirectory(__DIR__.'/js/dist/forum')
+        ->css(__DIR__.'/less/forum.less')
+        ->content(\Ramon\Avocado\Content\AddCriticalCss::class)
+        ->content(\Ramon\Avocado\Content\AddCriticalPreloads::class)
+        ->content(\Ramon\Avocado\Content\AddHeroBannerPreload::class)
+        ->content(\Ramon\Avocado\Content\CustomLoadingSpinner::class)
+        ->content(\Ramon\Avocado\Content\HideLogoFlash::class)
+        ->content(\Ramon\Avocado\Content\DiscussionStyle::class)
+        ->content(\Ramon\Avocado\Content\SearchStyle::class)
+        // No CSS-deferral injector here: Flarum core already emits async CSS
+        // natively (warm-visit cache + <link rel="preload" onload>); a custom
+        // deferral only duplicated <noscript>/<link> tags.
+        ->content(\Ramon\Avocado\Content\LoadFontAwesomeKit::class)
+        ->content(\Ramon\Avocado\Content\InjectOnlineUsers::class)
+        // Preloads de dado — cada um sai cedo se não estiver na sua rota.
+        ->content(\Ramon\Avocado\Content\PreloadTeamMembers::class)
+        ->content(\Ramon\Avocado\Content\PreloadShowcase::class)
+        ->content(\Ramon\Avocado\Content\PreloadHomeFeed::class)
+        ->content(\Ramon\Avocado\Content\PreloadChangelog::class)
+        ->route('/discussions', 'avocado-discussions')
+        ->route('/search', 'avocado-search'),
+
+    // A página "Salvos" só existe quando o fof/bookmarks não está ativo: duas
+    // rotas GET no mesmo `/bookmarks` derrubam o boot do Flarum inteiro
+    // (FastRoute\BadRouteException). Ver Support\BookmarksRoute.
+    (new Extend\Conditional())
+        ->whenExtensionDisabled(BookmarksRoute::CONFLICTING_EXTENSION_ID, fn () => [
+            (new Extend\Frontend('forum'))
+                ->route(BookmarksRoute::PATH, BookmarksRoute::ROUTE_NAME),
+        ]),
+
+    (new Extend\Routes('forum'))
+        ->get('/team', 'avocado-team', \Ramon\Avocado\Controller\TeamPageController::class)
+        // Dois nomes para o mesmo controller: o front monta as URLs por nome
+        // (app.route), e /changelog/:product leva o slug da tag do produto.
+        ->get('/changelog', 'avocado-changelog', \Ramon\Avocado\Controller\ChangelogPageController::class)
+        ->get('/changelog/{product}', 'avocado-changelog.product', \Ramon\Avocado\Controller\ChangelogPageController::class),
+
+    (new Extend\Middleware('forum'))
+        ->add(AddPerfHeaders::class)
+        // /t/produto e /t/subtag do changelog → 302 para /changelog/... (só age com o
+        // flarum/tags e o changelog ligados; ver Middleware\RedirectChangelogTags).
+        ->add(\Ramon\Avocado\Middleware\RedirectChangelogTags::class),
+
+    (new Extend\Frontend('admin'))
+        ->js(__DIR__.'/js/dist/admin.js')
+        ->css(__DIR__.'/less/admin.less'),
+
+    new Extend\Locales(__DIR__.'/locale'),
+
+    // ── flarum/realtime: NOT NEEDED - flarum/messages already handles it ────────────
+
+    // ── flarum/realtime — presence "quem está lendo" ─────────────────────────
+    // A rota de auth só existe com o realtime ativo: o controller injeta o
+    // singleton Pusher que o WebsocketProvider dele registra.
+    (new Extend\Conditional())
+        ->whenExtensionEnabled('flarum-realtime', fn () => [
+            (new Extend\Routes('api'))
+                ->post('/avocado/presence/auth', 'avocado.presence.auth', \Ramon\Avocado\Controller\PresenceAuthController::class),
+        ]),
+
+    // ── flarum/realtime + flarum/likes ───────────────────────────────────────
+    (new Extend\Conditional())
+        ->whenExtensionEnabled('flarum-realtime', fn () => [
+            (new Extend\Conditional())
+                ->whenExtensionEnabled('flarum-likes', fn () => [
+                    (new \Flarum\Realtime\Extend\Realtime())
+                        ->broadcastModelEvent(
+                            [
+                                \Flarum\Likes\Event\PostWasLiked::class,
+                                \Flarum\Likes\Event\PostWasUnliked::class,
+                            ],
+                            fn ($event) => $event->post,
+                            fn ($event) => $event->user,
+                            'likesMutation',
+                        ),
+                ]),
+        ]),
+
+    // ── flarum/realtime + flarum/sticky ──────────────────────────────────────
+    (new Extend\Conditional())
+        ->whenExtensionEnabled('flarum-realtime', fn () => [
+            (new Extend\Conditional())
+                ->whenExtensionEnabled('flarum-sticky', fn () => [
+                    (new \Flarum\Realtime\Extend\Realtime())
+                        ->broadcastModelEvent(
+                            [
+                                \Flarum\Sticky\Event\DiscussionWasStickied::class,
+                                \Flarum\Sticky\Event\DiscussionWasUnstickied::class,
+                            ],
+                            fn ($event) => $event->discussion,
+                            fn ($event) => $event->actor,
+                            'discussionPinned',
+                        ),
+                ]),
+        ]),
+
+    // ── flarum/realtime — post removal/restoration (delete + hide) ───────────
+    // Both events share one channel name (postRemoved): clients always need to
+    // refresh the discussion to reflect the new visible state, so a single
+    // event handler is enough.
+    (new Extend\Conditional())
+        ->whenExtensionEnabled('flarum-realtime', fn () => [
+            (new \Flarum\Realtime\Extend\Realtime())
+                ->broadcastModelEvent(
+                    [
+                        \Flarum\Post\Event\Deleted::class,
+                        \Flarum\Post\Event\Hidden::class,
+                        \Flarum\Post\Event\Restored::class,
+                    ],
+                    fn ($event) => $event->post,
+                    fn ($event) => $event->actor,
+                    'postRemoved',
+                ),
+        ]),
+
+    (new Extend\ApiResource(\Flarum\Api\Resource\ForumResource::class))
+        ->fields(\Ramon\Avocado\Api\ForumAttributes::class),
+
+    (new Extend\Model(\Flarum\Discussion\Discussion::class))
+        ->hasOne('avocadoHero', \Ramon\Avocado\Model\DiscussionHero::class, 'discussion_id')
+        ->hasOne('avocadoChangelog', \Ramon\Avocado\Model\ChangelogEntry::class, 'discussion_id')
+        ->hasMany('avocadoBookmark', \Ramon\Avocado\Model\Bookmark::class, 'discussion_id'),
+
+    (new Extend\ApiResource(\Flarum\Api\Resource\DiscussionResource::class))
+        ->fields(\Ramon\Avocado\Api\DiscussionFields::class)
+        // Eager-load the 1:1 hero companion so DiscussionFields' getters don't
+        // fire one SELECT per discussion when serializing an Index payload.
+        ->endpoint(
+            [Endpoint\Index::class, Endpoint\Show::class],
+            fn (Endpoint\Index|Endpoint\Show $endpoint) => $endpoint->eagerLoad('avocadoHero')
+        ),
+
+    // Versão e tipo de capa de uma entrada do changelog (tabela companheira). Como
+    // no bookmark, o eager-load decide com o banco na mão: sem a tabela migrada o
+    // endpoint segue sem ele em vez de derrubar toda listagem de discussões.
+    (new Extend\ApiResource(\Flarum\Api\Resource\DiscussionResource::class))
+        ->fields(\Ramon\Avocado\Api\ChangelogFields::class)
+        ->endpoint(
+            [Endpoint\Index::class, Endpoint\Show::class],
+            fn (Endpoint\Index|Endpoint\Show $endpoint) => ChangelogSchema::available()
+                ? $endpoint->eagerLoad('avocadoChangelog')
+                : $endpoint
+        ),
+
+    // Bookmarks do tema: campos e eager-load só existem quando o fof/bookmarks
+    // não está no comando. Cedendo, o tema para de serializar `avocadoBookmarked`
+    // e de carregar a relação por discussão — sem consulta morta em cada Index.
+    // avocadoBookmark é escopado ao ator, então o campo lê uma coleção de (0|1)
+    // linhas já em memória em vez de um SELECT por discussão.
+    (new Extend\Conditional())
+        ->whenExtensionDisabled(BookmarksRoute::CONFLICTING_EXTENSION_ID, fn () => [
+            (new Extend\ApiResource(\Flarum\Api\Resource\DiscussionResource::class))
+                ->fields(\Ramon\Avocado\Api\BookmarkFields::class)
+                ->endpoint(
+                    [Endpoint\Index::class, Endpoint\Show::class],
+                    // O mutator roda por request, então a decisão é tomada com o
+                    // banco na mão: sem a tabela migrada (código novo entregue
+                    // pelo composer, `flarum migrate` ainda não rodado) o
+                    // eager-load sai do endpoint em vez de derrubar toda
+                    // listagem de discussões com "Base table or view not found".
+                    // Guests não têm bookmark nenhum — a query também não entra.
+                    fn (Endpoint\Index|Endpoint\Show $endpoint) => BookmarksSchema::available()
+                        ? $endpoint->eagerLoadWhere('avocadoBookmark', function ($query, \Flarum\Api\Context $context) {
+                            $actor = $context->getActor();
+                            $query->where('user_id', $actor->isGuest() ? 0 : (int) $actor->id);
+                        })
+                        : $endpoint
+                ),
+        ]),
+
+    (new Extend\Routes('api'))
+        ->post('/avocado/banner', 'avocado.banner.upload', \Ramon\Avocado\Controller\UploadBannerController::class)
+        ->delete('/avocado/banner', 'avocado.banner.delete', \Ramon\Avocado\Controller\DeleteBannerController::class)
+        ->post('/avocado/auth-image', 'avocado.auth_image.upload', \Ramon\Avocado\Controller\UploadAuthImageController::class)
+        ->delete('/avocado/auth-image', 'avocado.auth_image.delete', \Ramon\Avocado\Controller\DeleteAuthImageController::class)
+        ->post('/avocado/logo-svg', 'avocado.logo_svg.upload', \Ramon\Avocado\Controller\UploadLogoSvgController::class)
+        ->delete('/avocado/logo-svg', 'avocado.logo_svg.delete', \Ramon\Avocado\Controller\DeleteLogoSvgController::class)
+        ->post('/avocado/discussion-hero', 'avocado.discussion_hero.upload', \Ramon\Avocado\Controller\UploadDiscussionHeroController::class)
+        ->delete('/avocado/discussion-hero', 'avocado.discussion_hero.delete', \Ramon\Avocado\Controller\DeleteDiscussionHeroController::class)
+        ->post('/avocado/bookmark', 'avocado.bookmark.create', \Ramon\Avocado\Controller\CreateBookmarkController::class)
+        ->patch('/avocado/bookmark', 'avocado.bookmark.update', \Ramon\Avocado\Controller\UpdateBookmarkController::class)
+        ->delete('/avocado/bookmark', 'avocado.bookmark.delete', \Ramon\Avocado\Controller\DeleteBookmarkController::class),
+
+    // Ícone SVG nas tags (absorvido da extensão `ramon/tag-icon-svg`). Só existe
+    // com o flarum/tags ativo, e só quando a extensão avulsa NÃO está: as duas
+    // registrariam os mesmos campos no TagResource e sobrescreveriam `Icon` duas
+    // vezes. Com ela ativa o tema cede (o attribute `avocadoTagIconSvg` nem sai
+    // no forum e o front não instala nada). O switch em si é o
+    // `avocado.tag_icon_svg_enabled`, lido em TagIconSvg::enabled().
+    (new Extend\Conditional())
+        ->whenExtensionEnabled(TagIconSvg::TAGS_EXTENSION_ID, fn () => [
+            (new Extend\Conditional())
+                ->whenExtensionDisabled(TagIconSvg::STANDALONE_EXTENSION_ID, fn () => [
+                    (new Extend\Model(\Flarum\Tags\Tag::class))
+                        ->cast('icon_svg_mono', 'bool')
+                        ->cast('icon_svg_scale', 'int'),
+
+                    (new Extend\ApiResource(\Flarum\Tags\Api\Resource\TagResource::class))
+                        ->fields(\Ramon\Avocado\Api\TagIconSvgFields::class),
+
+                    (new Extend\Settings())
+                        ->serializeToForum('avocadoTagIconSvg', TagIconSvg::SETTING, fn ($value) => TagIconSvg::enabledFor($value)),
+
+                    // O tamanho do ícone tem coluna própria (migration posterior): o modal
+                    // de tag só oferece o controle quando o servidor aceita o campo. Num
+                    // Extend\Settings à parte de propósito: `serializeToForum` indexa pela
+                    // chave do setting, e um segundo attribute na mesma instância apagaria
+                    // o `avocadoTagIconSvg` de cima.
+                    (new Extend\Settings())
+                        ->serializeToForum('avocadoTagIconSvgScale', TagIconSvg::SETTING, fn ($value) => TagIconSvg::enabledFor($value) && TagIconSvg::scaleAvailable()),
+                ]),
+        ]),
+
+    // As versões do changelog não contam como discussão: nem no total do autor,
+    // nem no da tag (Api\ChangelogCounts). Só o que sai no JSON muda.
+    (new Extend\ApiResource(\Flarum\Api\Resource\UserResource::class))
+        ->field('discussionCount', \Ramon\Avocado\Api\ChangelogCounts::forUsers(...)),
+
+    (new Extend\Conditional())
+        ->whenExtensionEnabled(TagIconSvg::TAGS_EXTENSION_ID, fn () => [
+            (new Extend\ApiResource(\Flarum\Tags\Api\Resource\TagResource::class))
+                ->field('discussionCount', \Ramon\Avocado\Api\ChangelogCounts::forTags(...)),
+        ]),
+
+    (new Extend\Notification())
+        ->type(\Ramon\Avocado\Notification\BookmarkReminderBlueprint::class, ['alert']),
+
+    (new Extend\Console())
+        ->command(\Ramon\Avocado\Console\SendBookmarkRemindersCommand::class)
+        ->schedule(
+            \Ramon\Avocado\Console\SendBookmarkRemindersCommand::class,
+            \Ramon\Avocado\Console\BookmarkReminderSchedule::class
+        ),
+
+    (new Extend\Settings())
+        ->serializeToForum('avocadoHeroImage', 'avocado.hero_image')
+        ->serializeToForum('avocadoHeroImagePosition', 'avocado.hero_image_position')
+        ->serializeToForum('avocadoAuthImage', 'avocado.auth_image')
+        ->serializeToForum('avocadoCustomAuthModal', 'avocado.custom_auth_modal', 'boolval')
+        ->serializeToForum('avocadoShowOnlineUsers', 'avocado.show_online_users', 'boolval')
+        ->serializeToForum('avocadoShowOnlineCount', 'avocado.show_online_count', 'boolval')
+        ->serializeToForum('avocadoShowAuthButtons', 'avocado.show_auth_buttons', 'boolval')
+        ->serializeToForum('avocadoSearchV1', 'avocado.search_v1', 'boolval')
+        ->serializeToForum('avocadoShowShare', 'avocado.show_share', 'boolval')
+        ->serializeToForum('avocadoShowActionIcons', 'avocado.show_action_icons', 'boolval')
+        ->serializeToForum('avocadoFixedAvatarEffect', 'avocado.fixed_avatar_effect', 'boolval')
+        // 'default' = a página de discussão de sempre (hero alto com wash na cor
+        // da tag, fio sem linha). 'editorial' = a variante portada do dfs: hero
+        // plano + a corrente que costura a conversa pela coluna do avatar.
+        // Serializado para o forum porque o skeleton precisa saber qual desenhar;
+        // o CSS em si é ligado pelo atributo em <html> que o
+        // Content\DiscussionStyle escreve antes do primeiro paint.
+        ->default('avocado.discussion_style', 'default')
+        ->serializeToForum('avocadoDiscussionStyle', 'avocado.discussion_style')
+        // Pílula "Escreva uma resposta…" fixa na base da tela em toda a discussão
+        // (js/src/forum/utils/composerDock.ts). Desligada, sobra só a do fim.
+        ->default('avocado.reply_dock_enabled', true)
+        ->serializeToForum('avocadoReplyDockEnabled', 'avocado.reply_dock_enabled', 'boolval')
+        // "↳ Em resposta a" no topo de um post que abre com menção a outro post
+        // (js/src/forum/utils/replyTo.ts). Desligado, a menção fica no texto.
+        ->default('avocado.reply_to_header', true)
+        ->serializeToForum('avocadoReplyToHeader', 'avocado.reply_to_header', 'boolval')
+        // Onde os badges de grupo aparecem no post: 'default' (camada desligada —
+        // disco do core sobre o avatar), 'inline' (ao lado do nome), 'below'
+        // (linha própria), 'side' (embaixo do avatar) ou 'side_icons' (embaixo do
+        // avatar, só ícones). O forum bundle converte isso nas classes
+        // .avocado-badges--* em <html>; ver forum/PostBadges.less.
+        ->default('avocado.post_badge_position', 'inline')
+        ->serializeToForum('avocadoPostBadgePosition', 'avocado.post_badge_position')
+        ->serializeToForum('avocadoHeroDecorationIcon', 'avocado.hero_decoration_icon', 'boolval')
+        ->serializeToForum('avocadoHeroDecorationIconCount', 'avocado.hero_decoration_icon_count')
+        ->serializeToForum('avocadoHeroDecorationIconOpacity', 'avocado.hero_decoration_icon_opacity')
+        ->serializeToForum('avocadoHeroDecoDivider', 'avocado.hero_deco_divider', 'boolval')
+        ->serializeToForum('avocadoHeroDecoDividerIcon', 'avocado.hero_deco_divider_icon')
+        ->serializeToForum('avocadoFeaturedTags', 'avocado.featured_tags')
+        ->serializeToForum('avocadoHeroImageTags', 'avocado.hero_image_tags')
+        ->serializeToForum('avocadoLogoSvg', 'avocado.logo_svg')
+        ->serializeToForum('avocadoLogoEnabled', 'avocado.logo_enabled', 'boolval')
+        ->serializeToForum('avocadoCustomDefaultAvatar', 'avocado.custom_default_avatar', 'boolval')
+        ->serializeToForum('avocadoShowGuestCta', 'avocado.show_guest_cta', 'boolval')
+        ->serializeToForum('avocadoShowPostCta', 'avocado.show_post_cta', 'boolval')
+        ->serializeToForum('avocadoPostCtaPosition', 'avocado.post_cta_position')
+        ->serializeToForum('avocadoHideLinksForGuests', 'avocado.hide_links_for_guests', 'boolval')
+        ->serializeToForum('avocadoShowcaseEnabled', 'avocado.showcase_enabled', 'boolval')
+        ->serializeToForum('avocadoShowcaseTag', 'avocado.showcase_tag')
+        ->serializeToForum('avocadoShowcaseHeading', 'avocado.showcase_heading')
+        ->serializeToForum('avocadoShowcaseCount', 'avocado.showcase_count')
+        ->serializeToForum('avocadoShowcaseImageStyle', 'avocado.showcase_image_style')
+        ->serializeToForum('avocadoCategoriesHeading',  'avocado.categories_heading')
+        ->serializeToForum('avocadoPopularHeading',     'avocado.popular_heading')
+        ->serializeToForum('avocadoFollowingHeading',   'avocado.following_heading')
+        // Lista da home: ordem (popular | latest) e quantidade (5 a 20).
+        ->serializeToForum('avocadoHomeFeedSort', 'avocado.home_feed_sort')
+        ->serializeToForum('avocadoHomeFeedCount', 'avocado.home_feed_count', fn ($n) => max(1, min(20, (int) $n ?: 5)))
+        ->serializeToForum('avocadoCustomHeroEnabled',  'avocado.custom_hero_enabled', 'boolval')
+        ->serializeToForum('avocadoCustomHeroHtml',     'avocado.custom_hero_html', fn ($html) => HtmlSanitizer::sanitize((string) $html))
+        ->serializeToForum('avocadoColoredEnabled', 'avocado.colored_enabled', 'boolval')
+        ->serializeToForum('avocadoColoredBorderStyle', 'avocado.colored_border_style', null, 'none')
+        ->serializeToForum('avocadoThreadsStyle', 'avocado.threads_style', 'boolval')
+        ->serializeToForum('avocadoCustomLoadingSpinner', 'avocado.custom_loading_spinner', 'boolval')
+        // O botão de salvar segue o mesmo veredito do backend (BookmarksSetting):
+        // sem a tabela migrada o forum recebe `false` e o front nem desenha o
+        // botão, em vez de oferecer uma ação que o controller vai recusar.
+        ->serializeToForum(
+            'avocadoBookmarksEnabled',
+            'avocado.bookmarks_enabled',
+            fn ($value) => (bool) filter_var($value ?? true, FILTER_VALIDATE_BOOL) && BookmarksSchema::available()
+        )
+        // Relógio de 12h (2:30 PM) ou 24h (14:30) nos horários que o tema
+        // desenha — hoje o seletor de lembrete e o horário no card salvo.
+        // 'auto' segue o locale do navegador de cada visitante, que é o que o
+        // input nativo fazia; '12'/'24' forçam o formato para o fórum todo.
+        ->serializeToForum('avocadoClockFormat', 'avocado.clock_format')
+        ->serializeToForum('avocadoUserCardEnabled', 'avocado.user_card_enabled', 'boolval')
+        ->serializeToForum('avocadoPresenceEnabled', 'avocado.presence_enabled', 'boolval')
+        ->serializeToForum('avocadoCakedayEnabled', 'avocado.cakeday_enabled', 'boolval')
+        ->serializeToForum('avocadoTeamPageEnabled', 'avocado.team_page_enabled', 'boolval')
+        ->serializeToForum('avocadoTeamPageGroups', 'avocado.team_page_groups')
+        ->serializeToForum('avocadoTeamPageTitle', 'avocado.team_page_title')
+        ->serializeToForum('avocadoTeamPageDescription', 'avocado.team_page_description')
+        // Changelog: cada tag em `changelog_tags` é um produto; cada discussão nela,
+        // uma versão. O título/descrição só personalizam o cabeçalho da página.
+        ->serializeToForum('avocadoChangelogEnabled', 'avocado.changelog_enabled', 'boolval')
+        ->serializeToForum('avocadoChangelogTags', 'avocado.changelog_tags')
+        ->serializeToForum('avocadoChangelogTitle', 'avocado.changelog_title')
+        ->serializeToForum('avocadoChangelogDescription', 'avocado.changelog_description')
+        ->default('avocado.hero_image_position', 'center top')
+        ->default('avocado.show_online_users', true)
+        ->default('avocado.show_auth_buttons', false)
+        ->default('avocado.custom_auth_modal', true)
+        ->default('avocado.search_v1', true)
+        ->default('avocado.show_share', true)
+        ->default('avocado.show_action_icons', true)
+        ->default('avocado.fixed_avatar_effect', true)
+        ->default('avocado.hero_decoration_icon', false)
+        ->default('avocado.hero_decoration_icon_opacity', '15')
+        ->default('avocado.featured_tags', '[]')
+        ->default('avocado.hero_image_tags', '[]')
+        ->default('avocado.logo_enabled', false)
+        ->default('avocado.custom_default_avatar', true)
+        ->default('avocado.show_guest_cta', true)
+        ->default('avocado.show_post_cta', false)
+        ->default('avocado.post_cta_position', '1')
+        ->default('avocado.hide_links_for_guests', false)
+        ->default('avocado.showcase_tag', '')
+        ->default('avocado.showcase_heading', '')
+        ->default('avocado.showcase_count', '5')
+        ->default('avocado.showcase_image_style', 'default')
+        ->default('avocado.categories_heading', '')
+        ->default('avocado.popular_heading', '')
+        ->default('avocado.following_heading', '')
+        ->default('avocado.home_feed_sort', 'popular')
+        ->default('avocado.home_feed_count', '5')
+        ->default('avocado.custom_hero_enabled', false)
+        ->default('avocado.custom_hero_html', '')
+        ->default('avocado.colored_enabled', false)
+        ->default('avocado.colored_border_style', 'none')
+        ->default('avocado.threads_style', false)
+        ->default('avocado.custom_loading_spinner', false)
+        ->default('avocado.loading_spinner_style', 'avocado')
+        ->default('avocado.loading_spinner_custom', '')
+        ->default('avocado.bookmarks_enabled', true)
+        ->default('avocado.clock_format', 'auto')
+        ->default('avocado.user_card_enabled', true)
+        ->default('avocado.presence_enabled', true)
+        ->default('avocado.cakeday_enabled', true)
+        ->default('avocado.team_page_enabled', false)
+        ->default('avocado.team_page_groups', '[]')
+        ->default('avocado.team_page_title', '')
+        ->default('avocado.team_page_description', '')
+        ->default('avocado.changelog_enabled', false)
+        ->default('avocado.changelog_tags', '[]')
+        ->default('avocado.changelog_title', '')
+        ->default('avocado.changelog_description', '')
+        ->default(TagIconSvg::SETTING, false)
+        ->default('avocado.fontawesome_kit_enabled', false),
+
+    (new Extend\SearchDriver(\Flarum\Search\Database\DatabaseSearchDriver::class))
+        ->addFilter(\Flarum\Discussion\Search\DiscussionSearcher::class, \Ramon\Avocado\Filter\BookmarkFilter::class)
+        // As versões do changelog moram na página dela, não nas listas de discussão
+        // (ver Search\HideChangelogFromDiscussionLists para o que continua listando).
+        ->addMutator(\Flarum\Discussion\Search\DiscussionSearcher::class, \Ramon\Avocado\Search\HideChangelogFromDiscussionLists::class),
+
+    (new Extend\Policy())
+        ->modelPolicy(\Flarum\Discussion\Discussion::class, \Ramon\Avocado\Access\DiscussionPolicy::class),
+
+    // linkrobins/support: linha do tempo de status dos tickets (ver
+    // Support\SupportEvents). Tudo dentro do Conditional: com a extensão
+    // desligada não existe a classe do resource nem do modelo para estender —
+    // o `::class` ali é só uma string, mas o extender resolveria a classe no
+    // boot e estouraria. O modelo é observado pelo service provider, o ator
+    // vem do middleware e o campo entra no ticket com a relação eager-carregada
+    // nas listagens.
+    (new Extend\Conditional())
+        ->whenExtensionEnabled(SupportEvents::EXTENSION_ID, fn () => [
+            (new Extend\ServiceProvider())
+                ->register(SupportEventsServiceProvider::class),
+
+            (new Extend\Middleware('api'))
+                ->add(\Ramon\Avocado\Middleware\RememberActor::class),
+
+            (new Extend\Model(SupportEvents::TICKET_MODEL))
+                ->hasMany('avocadoEvents', \Ramon\Avocado\Model\SupportEvent::class, 'ticket_id'),
+
+            (new Extend\ApiResource(SupportEvents::TICKET_RESOURCE))
+                ->fields(\Ramon\Avocado\Api\SupportEventFields::class)
+                ->endpoint(
+                    [Endpoint\Index::class, Endpoint\Show::class],
+                    fn (Endpoint\Index|Endpoint\Show $endpoint) => SupportEvents::available()
+                        ? $endpoint->eagerLoad(['avocadoEvents', 'avocadoEvents.user'])
+                        : $endpoint
+                ),
+        ]),
+];
