@@ -1,0 +1,296 @@
+// ─── Bookmarks (saved discussions) ───────────────────────────────────────────
+//
+// The /salvos page reuses the .AvocadoDiscussions layout, so this file only adds
+// the bookmark toggle button (on ThreadCards), the search-variant actions row,
+// the page title icon and the guest prompt. Colours are theme variables, so
+// dark mode is handled by Flarum's [data-theme^=dark] token switch.
+
+// ── Toggle button on cards ────────────────────────────────────────────────────
+// Hidden until the card is hovered, mirroring .AvocadoHome-threadControls.
+// Stays visible on keyboard focus and on touch devices (no hover to reveal it).
+.AvocadoThreadCard-bookmarkBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  border-radius: 50%;
+  color: var(--home-muted, #8f9097);
+  cursor: pointer;
+  font-size: 14px;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: background var(--avocado-t-fast), color var(--avocado-t-fast), transform 0.12s ease, opacity var(--avocado-t-fast);
+
+  .AvocadoHome-threadCard:hover &,
+  .AvocadoSearch-threadCard:hover &,
+  &:focus-visible {
+    opacity: 1;
+  }
+
+  @media (hover: none) {
+    opacity: 1;
+  }
+
+  &:hover {
+    background: color-mix(in srgb, var(--primary-color) 12%, transparent);
+    color: var(--primary-color);
+  }
+
+  &:active {
+    transform: scale(0.88);
+  }
+
+  &.is-saved {
+    color: var(--primary-color);
+  }
+}
+
+// ── Search-variant actions row (bookmark + controls dropdown) ────────────────
+.AvocadoSearch-threadActions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+  align-self: flex-start;
+}
+
+// ── Note/reminder meta row (BookmarksPage cards) ──────────────────────────────
+.AvocadoBookmark-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin-top: 8px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 12.5px;
+  color: var(--home-muted, #8f9097);
+  text-align: left;
+
+  &:hover {
+    color: var(--primary-color);
+  }
+
+  i {
+    margin-right: 5px;
+    font-size: 11px;
+  }
+}
+
+.AvocadoBookmark-metaReminder {
+  color: var(--primary-color);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+// ── Note/reminder modal ───────────────────────────────────────────────────────// ── Modal de bookmark ─────────────────────────────────────────────────────────
+// A casca (superfície, header, botão de fechar, sombra, backdrop) vem de
+// DiscussionModals.less, onde `.Modal.AvocadoBookmarkModal` entra na mesma
+// regra do Rename e do Editar tags. Aqui fica só o miolo do formulário, na
+// mesma linguagem: campo sem caixa, fio embaixo, ação compacta à direita.
+.AvocadoBookmarkModal {
+  @danger: #dc2626;
+
+  // 375px do .Modal--small espremem a linha de data + hora do lembrete.
+  &.Modal {
+    max-width: 420px;
+  }
+
+  .Modal-body {
+    padding: 8px 20px 18px;
+  }
+
+  &-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted-color);
+    margin-bottom: 4px;
+  }
+
+  .Form-group {
+    width: 100%;
+    margin-bottom: 18px;
+  }
+
+  // Mesmo campo do Rename e do modal de tags — mixin em DiscussionModals.less.
+  .FormControl {
+    .avocado-modal-field();
+    height: 40px;
+
+    &:focus {
+      .avocado-modal-field-focus();
+    }
+  }
+
+  &-note {
+    height: auto;
+    resize: vertical;
+    min-height: 76px;
+    line-height: 1.5;
+  }
+
+  // Data + hora do lembrete personalizado. A hora é montada com selects nossos
+  // (não `datetime-local`) para que 12h/24h seja escolha do fórum e não do
+  // navegador — ver js/src/forum/utils/clock.ts.
+  &-when {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  &-date {
+    flex: 1 1 150px;
+    min-width: 140px;
+  }
+
+  &-time {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  &-hour,
+  &-minute,
+  &-meridiem {
+    width: auto;
+    min-width: 62px;
+    padding-right: 6px;
+    padding-left: 6px;
+    text-align: center;
+  }
+
+  &-timeSep {
+    font-weight: 700;
+    color: var(--muted-color);
+  }
+
+  @media (max-width: 480px) {
+    &-date,
+    &-time {
+      flex: 1 1 100%;
+    }
+
+    &-hour,
+    &-minute,
+    &-meridiem {
+      flex: 1 1 0;
+      min-width: 0;
+    }
+  }
+
+  // `.Form-group` é uma coluna flex no resto da pilha, então a direção precisa
+  // ser declarada ou os dois botões empilham.
+  &-actions {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 22px;
+    margin-bottom: 0;
+  }
+
+  &-save,
+  &-cancel,
+  &-remove {
+    height: 36px;
+    padding: 0 16px;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: @font-sm;
+  }
+
+  // A ação primária deixa de atravessar o modal: pill compacta à direita.
+  &-save {
+    flex: 0 0 auto;
+  }
+
+  // Ghost. Mexemos nas custom properties que o core lê em vez de sobrescrever
+  // `background`/`color` na marra — é o que dispensa o `!important` daqui.
+  &-cancel {
+    flex: 0 0 auto;
+    --button-bg: transparent;
+    --button-bg-hover: var(--avocado-surface-1);
+    --button-bg-active: var(--avocado-surface-1);
+    --button-bg-disabled: transparent;
+    --button-color: var(--muted-color);
+    box-shadow: none;
+
+    &:hover:not(:disabled) {
+      --button-color: var(--text-color);
+    }
+  }
+
+  // Ação destrutiva, mantida longe do Save por um fio — misclique aqui apaga
+  // o bookmark sem confirmação.
+  &-danger {
+    display: flex;
+    justify-content: flex-start;
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid var(--avocado-border-soft);
+  }
+
+  &-remove {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 12px;
+    font-size: @font-xs;
+    --button-bg: transparent;
+    --button-bg-hover: color-mix(in srgb, @danger 12%, transparent);
+    --button-bg-active: color-mix(in srgb, @danger 18%, transparent);
+    --button-bg-disabled: transparent;
+    --button-color: @danger;
+    box-shadow: none;
+
+    .Button-icon {
+      font-size: 12px;
+      margin: 0;
+      color: inherit;
+    }
+  }
+}
+
+// ── Page title icon ───────────────────────────────────────────────────────────
+.AvocadoBookmarks-titleIcon {
+  font-size: 0.78em;
+  margin-right: 9px;
+  color: var(--primary-color);
+}
+
+// ── Guest prompt (logged-out visitor hits /salvos directly) ──────────────────
+.AvocadoBookmarks-guest {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 64px 24px;
+  text-align: center;
+  color: var(--home-muted, #8f9097);
+
+  > i {
+    font-size: 44px;
+    opacity: 0.4;
+  }
+
+  > p {
+    font-size: 15px;
+    font-weight: 600;
+    margin: 0;
+    max-width: 360px;
+    line-height: 1.5;
+  }
+}
