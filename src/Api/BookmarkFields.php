@@ -1,0 +1,69 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Ramon\Avocado\Api;
+
+use Flarum\Api\Context;
+use Flarum\Api\Schema;
+use Flarum\Discussion\Discussion;
+use Ramon\Avocado\Support\BookmarksSetting;
+
+/**
+ * Expõe `avocadoBookmarked` (boolean), `avocadoBookmarkNote` e
+ * `avocadoBookmarkRemindAt` na DiscussionResource. Os nomes carregam o prefixo
+ * do tema porque o fof/bookmarks serializa um `bookmarked` próprio na mesma
+ * resource — sem o prefixo, um sobrescreve o outro e o botão de salvar passa a
+ * refletir o estado do sistema errado. Tudo é resolvido da relação `avocadoBookmark`, que o
+ * endpoint carrega com eagerLoadWhere escopado ao ator (extend.php) — assim os
+ * getters leem uma coleção já em memória em vez de disparar um SELECT por
+ * discussão (CLAUDE.md §38.1). Como a relação é filtrada por user_id = ator,
+ * nota e lembrete nunca vazam entre usuários.
+ *
+ * Os campos são só de leitura e ficam ocultos para visitantes (guests não
+ * salvam); as escritas acontecem pelos endpoints dedicados
+ * POST/PATCH/DELETE /avocado/bookmark.
+ */
+class BookmarkFields
+{
+    public function __construct(
+        protected BookmarksSetting $bookmarks
+    ) {
+    }
+
+    public function __invoke(): array
+    {
+        $notGuest = fn (Discussion $discussion, Context $context) => ! $context->getActor()->isGuest()
+            && $this->bookmarks->enabled();
+
+        return [
+            Schema\Boolean::make('avocadoBookmarked')
+                ->visible($notGuest)
+                ->get(fn (Discussion $discussion): bool => self::actorBookmark($discussion) !== null),
+
+            Schema\Str::make('avocadoBookmarkNote')
+                ->nullable()
+                ->visible($notGuest)
+                ->get(fn (Discussion $discussion): ?string => self::actorBookmark($discussion)?->note),
+
+            Schema\Str::make('avocadoBookmarkRemindAt')
+                ->nullable()
+                ->visible($notGuest)
+                ->get(fn (Discussion $discussion): ?string => self::actorBookmark($discussion)?->remind_at?->toIso8601String()),
+        ];
+    }
+
+    /**
+     * Devolve o bookmark do ator já eager-carregado, ou null. relationLoaded
+     * evita um lazy-load (N+1) caso algum endpoint serialize a discussão sem o
+     * eager-load escopado.
+     */
+    private static function actorBookmark(Discussion $discussion): ?\Ramon\Avocado\Model\Bookmark
+    {
+        if (! $discussion->relationLoaded('avocadoBookmark')) {
+            return null;
+        }
+
+        return $discussion->getRelation('avocadoBookmark')->first();
+    }
+}
