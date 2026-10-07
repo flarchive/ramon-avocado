@@ -2,24 +2,13 @@
 
 > **Read-only archive of released versions of ramon/avocado.** Not for installation: use [Packagist](https://packagist.org/packages/ramon/avocado) or the [upstream repository](https://github.com/ram0ng1/avocado).
 
-**48** versions archived · Latest: [`v2.2.3`](https://github.com/flarchive/ramon-avocado/tree/archive/v2.2.3) · License: `MIT` · Flarum: `^2.0.0`
+**0** versions archived · Latest: [`v2.2.4`](https://github.com/flarchive/ramon-avocado/tree/archive/v2.2.4) · License: `MIT` · Flarum: `^2.0.0`
 
 ## Archived Versions
 
 | Version | Released | Flarum | Source |
 |---|---|---|---|
-| `v2.0.19` | 2026-05-14 | `^2.0.0` | [Browse](https://github.com/flarchive/ramon-avocado/tree/archive/v2.0.19) |
-| `v2.0.20` | 2026-05-14 | `^2.0.0` | [Browse](https://github.com/flarchive/ramon-avocado/tree/archive/v2.0.20) |
-| `v2.0.21` | 2026-05-14 | `^2.0.0` | [Browse](https://github.com/flarchive/ramon-avocado/tree/archive/v2.0.21) |
-| `v2.0.22` | 2026-05-15 | `^2.0.0` | [Browse](https://github.com/flarchive/ramon-avocado/tree/archive/v2.0.22) |
-| `v2.0.23` | 2026-05-16 | `^2.0.0` | [Browse](https://github.com/flarchive/ramon-avocado/tree/archive/v2.0.23) |
-| `v2.0.24` | 2026-05-22 | `^2.0.0` | [Browse](https://github.com/flarchive/ramon-avocado/tree/archive/v2.0.24) |
-| `v2.0.25` | 2026-05-22 | `^2.0.0` | [Browse](https://github.com/flarchive/ramon-avocado/tree/archive/v2.0.25) |
-| `v2.0.26` | 2026-05-23 | `^2.0.0` | [Browse](https://github.com/flarchive/ramon-avocado/tree/archive/v2.0.26) |
-| `v2.0.27` | 2026-05-24 | `^2.0.0` | [Browse](https://github.com/flarchive/ramon-avocado/tree/archive/v2.0.27) |
-| `v2.0.28` | 2026-05-24 | `^2.0.0` | [Browse](https://github.com/flarchive/ramon-avocado/tree/archive/v2.0.28) |
-
-[View all 48 versions](https://github.com/flarchive/ramon-avocado/tags)
+| — | — | — | — |
 
 Catalog entry: [packages/ramon-avocado.json](https://github.com/flarchive/archive-index/blob/main/packages/ramon-avocado.json)
 
